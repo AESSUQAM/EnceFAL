@@ -1,6 +1,6 @@
 # -*- encoding: utf-8 -*-
 from django.forms import ModelForm,Form, TextInput
-from django.forms import IntegerField, CharField, DecimalField
+from django.forms import IntegerField, CharField, DecimalField, BooleanField
 from models import Exemplaire,Vendeur,Livre,ETAT_LIVRE_CHOICES
 
 class IsbnTextInput(TextInput): # pragma: no cover

@@ -1,21 +1,42 @@
-{% extends 'admin/base.html' %}
+{% extends ext %}
 
 {% block branding %}
-Administration
+{% if not from_view %}
+<div class="header">
+	Administration
+</div>
+
+<div class="item">
+	<a href="{% url 'main:accueil' %}">Retour au site</a>
+</div>
+{% endif %}
 {% endblock %}
 
 {% block content %}
 {% load static %}
 
-
 <div class="page-content">
+	{% if from_view %}
+    <form action="" method="get" id="depot_form" class="form-inline hide-print">
+        <p>
+            Veuillez saisir votre code permanent
+        </p>
+        <label for="code_perm" class="ui control-label">code permanent:
+            <input id="code_perm" name="code_perm" class="input-mini" size="16" type="text" value="">
+            <button class="ui button btn btn-primary" type="submit">Visualiser exemplaires</button>
+        </label>
+    </form>
+	{% endif %}
+    <hr>
     {% if exemplaires %}
     <div class="facture-wrap">
         <img style="float:right;" class="img-responsive" src="{% get_static_prefix %}images/logo_encefal.png" alt="logo_encefal"></img>
-        <h4>Liste des livres de {{vendeur.prenom}} {{vendeur.nom}} ({{vendeur.code_permanent}})</h4>
+        <h4 class="ui black header">Liste des livres de {{vendeur.prenom}} {{vendeur.nom}} ({{vendeur.code_permanent}})</h4>
         <p>Transaction effectuée le {{ date_transaction }}</p>
+		{% if not from_view %} 
         <p>Servi par {{ employe }}</p>
-            <table class="table table-striped table-facture">
+		{% endif %}
+            <table class="ui table table-striped table-facture">
                 <thead>
                     <tr>
                         <th>Id</th>
@@ -38,14 +59,15 @@ Administration
                 {% endfor %}
                 <tfoot>
                     <tr>
-                        <td colspan="6">Total: {{ montant_total }} $</td>
+                        <td colspan="6" style="font-size: 18px">Total: {{ montant_total }} $</td>
                     </tr>
                 </tfoot>
             </table>
-        <p>Merci de faire affaire avec la foire aux livres :) .</p>
+        <p>Merci de faire affaire avec la foire aux livres <i class="big smile icon"></i> .</p>
 
     </div>
-      <hr>
+	{% include "encefal/vendeur/initial.html" %}
+      <!--<hr>
       <h5>Dates remise des chèques et des livres non vendus :</h5>
       <ul>
           <li>lundi 22 septembre 2014, 10h-18h</li> 
@@ -58,7 +80,10 @@ Administration
 
       <p>Vous devrez avoir en votre possession une preuve d'identité (carte étudiante) pour
       récuperer vos livres et votre chèque.</p>
-      <p>Tous les livres non-récupérés après cette période seront considérés un don à la foire aux livres.</p>
+      <p>Tous les livres non-récupérés après cette période seront considérés un don à la foire aux livres.</p> -->
+
+	{% else %}
+	<p> Aucun vendeur ne correspond aux données </p>
 
     {% endif %}
 </div>

@@ -10,9 +10,9 @@
             Veuillez saisir le numero de votre facture, obtenu 
             auprès du personnel de la foire lors de votre transaction.
         </p>
-        <label for="no_facture" class="control-label">Numéro de facture:
+        <label for="no_facture" class="ui control-label">Numéro de facture:
             <input id="no_facture" name="id" class="input-mini" size="16" type="text" value="">
-            <button class="btn btn-primary" type="submit">Visualiser facture</button>
+            <button class="ui button btn btn-primary" type="submit">Visualiser facture</button>
         </label>
     </form>
     <hr>
@@ -43,7 +43,22 @@
             {% endfor %}
             <tfoot>
                 <tr>
-                    <td colspan="5">Total: {{ facture.prix_total }} $</td>
+					<td colspan="4"></td>
+                    <td colspan="1">Total: {{ facture.prix_avant_taxes|floatformat:"2" }} $</td>
+					{% if taxable %}
+				</tr>
+				<tr>
+					<td colspan="4"></td>
+					<td colspan="1">TPS: {{ facture.prix_tps|floatformat:"2" }} $ </td>
+				</tr>
+				<tr>
+					<td colspan="4"></td>
+					<td colspan="1">TVQ: {{ facture.prix_tvq|floatformat:"2" }} $ </td>
+				</tr>
+				<tr>
+					<td colspan="4"></td>
+					<td colspan="1">Final: {{ facture.prix_total|floatformat:"2" }} $ </td>
+					{% endif %}
                 </tr>
             </tfoot>
         </table>

@@ -23,11 +23,6 @@ from main.models import (
                                     Vente, Facture
                                    )
 
-#Eventually modifiy this to manage admin website
-#and my_view as explained on docs.djangoproject.com/en/1.9/ref/contrib/admin/
-#class AdminEmployee(AdminSite):
-#	index_template="employee/index.html"
-
 class ExemplaireReceptionInline(admin.TabularInline): #pragma: no cover
 
     exclude = ['facture', 'actif', 'etat', 'livre']
@@ -44,7 +39,7 @@ class ExemplaireVenteInline(admin.TabularInline): #pragma: no cover
     fields = ['identifiant','isbn', 'titre', 'auteur', 'prix']
     extra = 5
 
-class SessionAdmin(admin.ModelAdmin): #pragma: no cover
+class SessionAdmin(admin.ModelAdmin):
     exclude = ('actif',)
     list_display = ('nom', 'date_debut', 'date_fin',)
 
@@ -52,6 +47,7 @@ class ReceptionAdmin(admin.ModelAdmin):
     model = Reception
     exclude = ('actif',)
     fields = [
+			  'code_carte_etudiante',
               'code_permanent',
               'prenom',
               'nom' ,
@@ -86,6 +82,7 @@ class ReceptionAdmin(admin.ModelAdmin):
         context['date_transaction'] = datetime.date.today()
         context['employe'] = request.user.username
         context['montant_total'] = sum([e.prix for e in context['exemplaires']]) or 0
+        context['ext']='admin/base.html'
 
         return render(request, 'encefal/depots.html', Context(context))
 
@@ -107,7 +104,7 @@ class VenteAdmin(admin.ModelAdmin):
 
 	def __init__(self, *args, **kwargs):
 		super(VenteAdmin, self).__init__(*args, **kwargs)
-		
+
 	def get_form(self, request, obj=None, **kwargs):
 		self.model.session = Session.current_session()
 		form = super(VenteAdmin, self).get_form(request, obj, **kwargs)
@@ -141,7 +138,8 @@ class VenteAdmin(admin.ModelAdmin):
 	model = Facture
 	readonly_fields = ('employe','session',)
 	fields = ('employe', 'session')
-	list_display = ( 'date_creation', 'employe', 'session', 'nb_livres', 'prix_total',)
+	list_display = ( 'date_creation', 'employe', 'session', 'nb_livres', 'prix_avant_taxes',)
+
 	exclude = ('actif',)
 	actions = [ annuler_vente ]
 	inlines = [ ExemplaireVenteInline, ]

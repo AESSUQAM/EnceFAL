@@ -3,7 +3,8 @@ import json
 import urllib
 from lxml import html
 
-from datetime import datetime, timedelta, date
+import datetime
+from django.conf import settings
 from django.shortcuts import render_to_response,render
 from django.template import RequestContext, Context
 from django.http import (
@@ -50,13 +51,8 @@ def livre(request):
     if not request.user.is_authenticated():
         return HttpResponseNotFound()
 
-	print("Assert ISBN")
 	assert('isbn' in request.GET)
-
-	print("Assert NB")
 	assert('nb' in request.GET)
-
-	print("Assert Len")
 	assert(len(request.GET['isbn']) in [10,13])
 
 	print("Assert done !")
@@ -108,6 +104,49 @@ def livre(request):
 		return HttpResponse(json.dumps(reponse), content_type="application/json")
 	else:
 		return HttpResponseNotFound()
+    try:
+	    livre = Livre.objects.get(isbn=isbn)
+    except Livre.DoesNotExist:
+	    pass
+
+    if not livre:
+	    query = ISBN_DB_BASE_QUERY.format(settings.ISBNDB_API_KEY, isbn)
+	    reponse_query = json.load(urllib.urlopen(query))
+	    if 'error' not in reponse_query:
+		    reponse_query = reponse_query['data'][0]
+
+		    titre = reponse_query['title'] if reponse_query['title'] else ''
+		    auteur = reponse_query['author_data'][0]['name'] if reponse_query['author_data'] else ''
+
+		    reponse = {'titre':titre,
+				    'auteur':auteur,
+				    'nb':nb}
+	    else:
+
+		    query = COOP_UQAM_BASE_QUERY.format(isbn)
+		    reponse_query = urllib.urlopen(query)
+		    tree = html.fromstring(reponse_query.read())
+
+		    titres = tree.cssselect("h3 a")
+		    if titres:
+
+			    titre = titres[0].text
+
+			    auteur = tree.cssselect("h3 + p")[0].text_content().split(' : ')[1].split('\r')[0].strip()
+
+			    reponse = {'titre':titre,
+                           'auteur':auteur,
+                           'nb':nb}
+
+    else:
+	    reponse = {'titre':livre.titre,
+			    'auteur':livre.auteur,
+                   'nb':nb}
+
+    if reponse:
+	    return HttpResponse(json.dumps(reponse), content_type="application/json")
+    else:
+	    return HttpResponseNotFound()
 
 def exemplaire(request):
 
@@ -116,7 +155,6 @@ def exemplaire(request):
 
 	assert('identifiant' in request.GET)
 	assert('nb' in request.GET)
-	print("First asserts")
 
     nb = request.GET['nb']
     identifiant = request.GET['identifiant']
@@ -126,9 +164,8 @@ def exemplaire(request):
     except Exemplaire.DoesNotExist:
         return HttpResponseNotFound()
 
-	print("second Asserts")
 	assert(exemplaire.livre)
-	print("Second asserts done")
+	assert(exemplaire.livre)
 
     if exemplaire.etat != 'VENT':
         reponse = {
@@ -177,20 +214,55 @@ def factures(request):
     if not request.user.is_authenticated():
         return HttpResponseNotFound()
 
-    if 'id' in request.GET and request.GET['id']:
-        id_facture = request.GET['id']
+	if not request.user.is_authenticated():
+		return HttpResponseNotFound()
 
-        try:
-            facture = Facture.objects.get(id=id_facture)
-        except Facture.DoesNotExist:
-            facture = None
-    else:
-        # Hack louche pour l'instant
-        facture = 0
+	if 'id' in request.GET and request.GET['id']:
+		id_facture = request.GET['id']
 
-    context = {
-        'facture':facture,
-    }
+		try:
+			id_facture = int(id_facture)
 
-    return render(request, 'encefal/factures.html', context)
+			try:
+				facture = Facture.objects.get(id=id_facture)
+			except Facture.DoesNotExist:
+				facture = None
+		except:
+			facture = None
+
+	else:
+		# Hack louche pour l'instant
+		facture = 0
+
+	context = {
+		'facture':facture,
+		'taxable':settings.TAXABLES,
+	}
+
+	return render(request, 'encefal/factures.html', context)
+
+def livresVendeur(request):
+	context={}
+
+	if 'code_perm' in request.GET and request.GET['code_perm']:
+		code_vend = request.GET['code_perm']
+
+		# Afficher recu
+		try:
+		    vendeur = Vendeur.objects.get(code_permanent=code_vend)
+		    context['vendeur'] = vendeur
+		    context['exemplaires'] = vendeur.exemplaires.all()
+
+		except Vendeur.DoesNotExist:
+		    context['vendeur'] = None
+		    context['exemplaires'] = []
+
+		context['date_transaction'] = datetime.date.today()
+		context['employe'] = 'Non-disponible'
+		context['montant_total'] = sum([e.prix for e in context['exemplaires']]) or 0
+
+	context['from_view']=True
+	context['ext']='base.html'
+
+	return render(request, 'encefal/depots.html', context)
 

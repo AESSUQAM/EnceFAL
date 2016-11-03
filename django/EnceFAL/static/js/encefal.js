@@ -118,8 +118,11 @@ $(document).ready(function() {
 
         });
 
+	    $('body').keydown(function(event) {
+            if (event.keyCode == 13) {
+                return false;
+             }
+        });
+
     }
-
-
-
 })

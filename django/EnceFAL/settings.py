@@ -122,6 +122,8 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+ALLOWED_HOSTS = [ "localhost" ]
+
 # Internationalization
 # https://docs.djangoproject.com/en/1.9/topics/i18n/
 

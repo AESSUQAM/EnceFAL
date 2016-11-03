@@ -1,5 +1,10 @@
+# -*- encoding: utf-8 -*-
+
 import os
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+#Les ventes effectués au sein de l'application seront taxables (TPS = 5%, TVQ = 9.975%)
+TAXABLES = True
 
 DATABASES = {
     'default': {

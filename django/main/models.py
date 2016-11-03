@@ -45,11 +45,10 @@ class Vendeur(Metadata):
         verbose_name = "Vendeur (Vrai)"
         verbose_name_plural = "Vendeurs (Vrai)"
 
+    code_carte_etudiante = models.IntegerField(null=True, blank=True, #pragma: no cover
+                                       verbose_name="Code carte étudiante",
+                                       help_text="Scannez la carte étudiante")
 
-    # En attendant les scanners, ce champ est inutile.
-    #code_carte_etudiante = models.IntegerField(null=False, blank=False,
-                                       #verbose_name="Code carte étudiante",
-                                       #help_text="Scannez la carte étudiante")
     nom = models.CharField(max_length=255) #pragma: no cover
     prenom = models.CharField(max_length=255, verbose_name='Prénom', ) #pragma: no cover
     code_permanent = models.CharField(max_length=12) #pragma: no cover
@@ -131,33 +130,33 @@ class Session(Metadata):
 ################################################################################
 
 class Facture(Metadata):
-    employe = models.ForeignKey(User, db_column='employe', #pragma: no cover
-                                related_name='factures',blank=True)
-    session = models.ForeignKey(Session, db_column='session', #pragma: no cover
-                                related_name='factures',blank=True)
+	employe = models.ForeignKey(User, db_column='employe', #pragma: no cover
+		                        related_name='factures',blank=True)
+	session = models.ForeignKey(Session, db_column='session', #pragma: no cover
+		                        related_name='factures',blank=True)
 
-    def __unicode__(self):
-      return 'Facture #%s' % (self.id)
+	def __unicode__(self):
+	  return 'Facture #%s' % (self.id)
 
-    def nb_livres(self):
-        return self.exemplaires.count()
-    nb_livres.short_description = 'Nombre de livres' #pragma: no cover
+	def nb_livres(self):
+		return self.exemplaires.count()
+	nb_livres.short_description = 'Nombre de livres' #pragma: no cover
 
-    def prix_avant_taxes(self):
-        return self.__roundTwoPlace(sum([e.prix for e in self.exemplaires.all()])) or 0
+	def prix_avant_taxes(self):
+		return float(sum([e.prix for e in self.exemplaires.all()])) or 0
 
-    def prix_tps(self):
-        return self.__roundTwoPlace(self.prix_avant_taxes() * Decimal('0.05'))
+	def prix_tps(self):
+		return self.prix_avant_taxes() * 0.05
 
-    def prix_tvq(self):
-        return self.__roundTwoPlace(self.prix_avant_taxes() * Decimal('0.09975'))
+	def prix_tvq(self):
+		return self.prix_avant_taxes() * 0.09975
 
-    def prix_total(self):
-        return self.__roundTwoPlace(self.prix_avant_taxes() + self.prix_tps() + self.prix_tvq())
-
-    def __roundTwoPlace(self, var):
-        return var.quantize(Decimal('0.01'))
-    prix_total.short_description = 'Prix total de la facture' #pragma: no cover
+	def prix_total(self):
+		prix = self.prix_avant_taxes()
+		if settings.TAXABLES:
+			prix = self.prix_avant_taxes() + self.prix_tps() + self.prix_tvq()
+		return round(prix, 2)
+	prix_total.short_description = 'Prix de la facture avec ou sans les taxes' #pragma: no cover
 
 
 ################################################################################

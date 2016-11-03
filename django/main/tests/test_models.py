@@ -1,5 +1,6 @@
 # -*- encoding: utf-8 -*-
 
+from django.conf import settings
 from django.test import TestCase, Client
 from django.core import mail
 from django.forms import ValidationError
@@ -9,7 +10,6 @@ import datetime
 from decimal import Decimal
 
 class ModelsTest(TestCase):
-
     def setUp(self):
         # Test statique de session avant la creation
         self.assertIsNone(Session.current_session())
@@ -35,9 +35,9 @@ class ModelsTest(TestCase):
     def testVendeur(self):
         # Teste les fonctionalite du vendeur
         Vendeur.objects.create(nom="Test", prenom="Cas",
-                                    code_permanent="TESC00000000",
-                                    email="test.cas@test.com",
-                                    telephone="(123) 000-1234")
+					         		code_permanent="TESC00000000",
+							        email="test.cas@test.com",
+							        telephone="(123) 000-1234")
 
         self.assertIsNotNone(Vendeur.objects.get(nom="Test"))
         vend = Vendeur.objects.get(nom="Test")
@@ -104,13 +104,12 @@ class ModelsTest(TestCase):
 
         self.assertTrue('1' in fact.__unicode__())
         self.assertEqual(fact.nb_livres(), 1)
-        self.assertEqual(fact.prix_avant_taxes(), Decimal('10.05'))
+        self.assertEqual(fact.prix_avant_taxes(), 10.05)
 
         if settings.TAXABLES:
             self.assertTrue(0.4 < fact.prix_tps() < 0.6)
-            self.assertTrue(0.9 < fact.prix_tvq() < 1.1)
-            self.assertEqual(fact.prix_total(), Decimal('11.55'))
-
+            self.assertTrue(1 < fact.prix_tvq() < 1.05)
+            self.assertEqual(fact.prix_total(), 11.55)
 
     # Test de quelques methodes
     def testDatabase(self):
@@ -121,6 +120,12 @@ class ModelsTest(TestCase):
         vend = Vendeur.objects.get(nom="Robert")
         liv = Livre.objects.get(titre="abc123")
         exe = Exemplaire.objects.create(livre=liv, vendeur=vend, etat="VENT", prix='10.05')
+
+        # Assert des fonctions de ces objets
+        self.assertEqual(vend.nb_livres(), 2)
+        self.assertEqual(liv.nb_exemplaires_en_vente(), 2)
+        self.assertEqual(liv.prix_moyen(), Decimal('10.05'))
+        self.assertEqual(exe.vendeur, vend)
 
         # Assert des fonctions de ces objets
         self.assertEqual(vend.nb_livres(), 2)
