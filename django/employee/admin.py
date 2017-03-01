@@ -23,7 +23,7 @@ from main.models import (
                                     Vente, Facture
                                    )
 
-class ExemplaireReceptionInline(admin.TabularInline): #pragma: no cover
+class ExemplaireReceptionInline(admin.TabularInline):
 
     exclude = ['facture', 'actif', 'etat', 'livre']
     model = Exemplaire
@@ -31,7 +31,7 @@ class ExemplaireReceptionInline(admin.TabularInline): #pragma: no cover
     fields = ['isbn', 'titre', 'auteur', 'prix']
     extra = 5
 
-class ExemplaireVenteInline(admin.TabularInline): #pragma: no cover
+class ExemplaireVenteInline(admin.TabularInline):
 
     exclude = [ 'actif', 'etat', 'livre']
     model = Exemplaire

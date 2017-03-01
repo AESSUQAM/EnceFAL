@@ -2,10 +2,14 @@
 
 from django.test import TestCase
 from main.apps import *
+import os
 
 class FormsTest(TestCase):
     def setUp(self):
-        self.main_app = MainConfig()
+        class temp:
+            __path__ = "."
+        self.a = temp()
+        self.main_app = MainConfig("main", self.a)
 
-    def appNamesCorrect(self):
-        assertEqual(main_app, "main")
+    def test_appNamesCorrect(self):
+        self.assertEqual(self.main_app.name, "main")
